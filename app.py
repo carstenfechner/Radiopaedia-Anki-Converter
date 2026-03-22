@@ -65,7 +65,7 @@ def _run_job(job_id: str, folder_title: str,
             with _playwright_sem:
                 result = dl_article(url=url, output_dir=tmp,
                                     headed=False, delay_ms=500,
-                                    progress_cb=cb)
+                                    progress_cb=cb, webp=True)
             article_data_list.append(result)
             cb({"type": "item_done",
                 "message": f"Article {result['rid']} \u2014 {result['plain_title']}"})
@@ -79,7 +79,8 @@ def _run_job(job_id: str, folder_title: str,
             with _playwright_sem:
                 results = dl_run(case_url=url, output_dir=tmp,
                                  delay_ms=500, headed=False,
-                                 filter_series=None, progress_cb=cb)
+                                 filter_series=None, progress_cb=cb,
+                                 webp=True)
             case_data_list.append(results)   # one group (list) per URL → one card
             slug = url.rstrip("/").split("/")[-1]
             rid  = results[0]["rid"] if results else "?"

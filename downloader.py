@@ -32,6 +32,15 @@ import requests
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from tqdm import tqdm
 
+try:
+    from PIL import Image as _PILImage
+    _PILLOW_AVAILABLE = True
+except ImportError:
+    _PILLOW_AVAILABLE = False
+
+# WebP conversion quality (0-100). 80 gives ~90% size reduction vs PNG/JPG.
+WEBP_QUALITY = 80
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -114,6 +123,24 @@ def url_type(url: str) -> str:
     return "unknown"
 
 
+def convert_to_webp(src: Path, quality: int = WEBP_QUALITY) -> Path:
+    """
+    Convert *src* (jpg/png) to WebP at the given quality, delete the original,
+    and return the path of the new .webp file.
+    Raises RuntimeError if Pillow is not installed.
+    """
+    if not _PILLOW_AVAILABLE:
+        raise RuntimeError(
+            "Pillow is not installed — cannot convert to WebP. "
+            "Run: pip install pillow"
+        )
+    dest = src.with_suffix(".webp")
+    with _PILImage.open(src) as img:
+        img.save(dest, "WEBP", quality=quality, method=4)
+    src.unlink()
+    return dest
+
+
 def find_linked_case_urls(page) -> list[str]:
     """
     Return absolute case URLs from the 'Cases and figures' section of an article page.
@@ -181,7 +208,7 @@ def find_linked_case_urls(page) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
-                     progress_cb=None) -> dict:
+                     progress_cb=None, webp: bool = True) -> dict:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not headed)
         context = browser.new_context(
@@ -272,6 +299,7 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
                 headed=headed,
                 filter_series=None,
                 progress_cb=progress_cb,
+                webp=webp,
             )
             linked_cases.extend(case_results)
 
@@ -319,7 +347,8 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
 
 def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
         filter_series: Optional[list[str]],
-        progress_cb=None) -> list[dict]:
+        progress_cb=None,
+        webp: bool = True) -> list[dict]:
     """
     Download images from all viewers on a Radiopaedia case page.
     Returns a list of dicts — one per viewer, ordered top-to-bottom as on the page.
@@ -474,6 +503,9 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
         case_dir = output_dir / f"{study_id}_{case_slug}"
         case_dir.mkdir(parents=True, exist_ok=True)
 
+        # Determine effective extension per series (webp if conversion is on)
+        effective_ext: dict[int, str] = {}  # series_id → final ext
+
         total_ok = total_skip = 0
         for series in series_list:
             if filter_series and series.name not in filter_series:
@@ -482,14 +514,17 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
                 print(f"\nSkipping '{series.name}': no URLs captured.")
                 continue
 
-            ext   = ext_from_content_type(series.content_type)
+            raw_ext = ext_from_content_type(series.content_type)
+            final_ext = "webp" if (webp and _PILLOW_AVAILABLE) else raw_ext
+            effective_ext[series.series_id] = final_ext
             sname = safe_name(series.name)
-            print(f"\nDownloading: {series.name} ({sum(1 for u in series.urls if u)} images)")
+            print(f"\nDownloading: {series.name} ({sum(1 for u in series.urls if u)} images)"
+                  + (f"  [→ WebP q={WEBP_QUALITY}]" if final_ext == "webp" else ""))
 
             with tqdm(total=len(series.urls), desc=f"  {series.name}", unit="img") as pbar:
                 for idx, url in enumerate(series.urls, start=1):
-                    # Files named {study_id}_{safe_series}_{idx:03d}.{ext}
-                    filename = f"{study_id}_{sname}_{idx:03d}.{ext}"
+                    # Files named {study_id}_{safe_series}_{idx:03d}.{final_ext}
+                    filename = f"{study_id}_{sname}_{idx:03d}.{final_ext}"
                     dest = case_dir / filename
 
                     if dest.exists():
@@ -502,7 +537,19 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
                         try:
                             resp = session.get(url, timeout=30, stream=True)
                             resp.raise_for_status()
-                            dest.write_bytes(resp.content)
+                            if final_ext == "webp":
+                                # Write original first, then convert
+                                tmp_dest = dest.with_suffix("." + raw_ext)
+                                tmp_dest.write_bytes(resp.content)
+                                try:
+                                    convert_to_webp(tmp_dest)
+                                except Exception as conv_err:
+                                    # Conversion failed — keep original format
+                                    print(f"\n  WebP conversion failed for {filename}: {conv_err}")
+                                    tmp_dest.rename(dest.with_suffix("." + raw_ext))
+                                    effective_ext[series.series_id] = raw_ext
+                            else:
+                                dest.write_bytes(resp.content)
                             success = True; break
                         except Exception as e:
                             if attempt < 2:
@@ -519,14 +566,23 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
 
         series_dicts = []
         for s in series_list:
-            ext = ext_from_content_type(s.content_type)
+            raw_ext = ext_from_content_type(s.content_type)
+            final_ext = effective_ext.get(s.series_id,
+                            "webp" if (webp and _PILLOW_AVAILABLE) else raw_ext)
             series_dicts.append({
                 "name":       s.name,
                 "safe_name":  safe_name(s.name),
                 "max_slices": len(s.urls),
-                "ext":        ext,
+                "ext":        final_ext,
             })
-        dominant_ext = "png" if any(sd["ext"] == "png" for sd in series_dicts) else "jpg"
+        # dominant ext: prefer webp, then png, else jpg
+        exts = {sd["ext"] for sd in series_dicts}
+        if "webp" in exts:
+            dominant_ext = "webp"
+        elif "png" in exts:
+            dominant_ext = "png"
+        else:
+            dominant_ext = "jpg"
 
         results.append({
             "case_id":        str(study_id),   # unique per viewer — used for filenames
@@ -582,10 +638,18 @@ Examples:
                         help="Extra wait after page load in ms (default: 500)")
     parser.add_argument("--series", action="append", metavar="NAME", dest="series",
                         help="Download only this series (repeatable)")
+    parser.add_argument("--no-webp", action="store_true",
+                        help="Keep original JPG/PNG instead of converting to WebP")
     args = parser.parse_args()
 
     output_dir = Path(args.output).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    use_webp = not args.no_webp
+    if use_webp and not _PILLOW_AVAILABLE:
+        print("Warning: Pillow not installed — WebP conversion disabled. "
+              "Run: pip install pillow", file=sys.stderr)
+        use_webp = False
 
     t = url_type(args.url)
     try:
@@ -596,6 +660,7 @@ Examples:
                 delay_ms=args.delay,
                 headed=args.headed,
                 filter_series=args.series,
+                webp=use_webp,
             )
         elif t == "article":
             download_article(
@@ -603,6 +668,7 @@ Examples:
                 output_dir=output_dir,
                 headed=args.headed,
                 delay_ms=args.delay,
+                webp=use_webp,
             )
         else:
             sys.exit("Error: URL must be a radiopaedia.org/cases/... or /articles/... URL")

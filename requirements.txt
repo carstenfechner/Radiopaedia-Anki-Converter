@@ -4,3 +4,4 @@ beautifulsoup4>=4.12.0
 tqdm>=4.66.0
 flask>=3.0.0
 genanki>=0.13.0
+pillow>=10.0.0
