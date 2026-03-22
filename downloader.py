@@ -283,7 +283,8 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
     print(f"Saved article HTML: {dest.resolve()}")
 
     # --- Download each linked case and collect full run() dicts ---
-    linked_cases: list[dict] = []   # list of run() return dicts
+    linked_cases:       list[dict]       = []   # flat list of viewer dicts
+    linked_case_groups: list[list[dict]] = []   # grouped by case URL (for quiz deck)
 
     if linked_case_urls:
         if max_cases is not None and max_cases > 0:
@@ -310,6 +311,8 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
                 webp=webp,
             )
             linked_cases.extend(case_results)
+            if case_results:
+                linked_case_groups.append(case_results)
 
     # --- Write linked-cases index file ---
     index_file = output_dir / f"{rid}_linked_cases.txt"
@@ -342,10 +345,11 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
     )
 
     return {
-        "rid":          rid,
-        "plain_title":  plain_title,
-        "content_html": content_html,
-        "linked_cases": linked_cases,
+        "rid":               rid,
+        "plain_title":       plain_title,
+        "content_html":      content_html,
+        "linked_cases":      linked_cases,
+        "linked_case_groups": linked_case_groups,
     }
 
 

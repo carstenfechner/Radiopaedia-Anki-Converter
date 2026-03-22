@@ -9,9 +9,11 @@ Usage:
 Deployable behind nginx — set X-Accel-Buffering: no for SSE support.
 """
 
+import ctypes
 import json
 import queue
 import shutil
+import subprocess
 import sys
 import tempfile
 import threading
@@ -34,16 +36,55 @@ _playwright_sem = threading.Semaphore(3)   # max 3 concurrent Chromium instances
 
 
 # ---------------------------------------------------------------------------
+# Sleep prevention (cross-platform)
+# ---------------------------------------------------------------------------
+
+def _prevent_sleep():
+    """Block OS idle-sleep. Returns an opaque handle for _allow_sleep()."""
+    if sys.platform == "darwin":
+        try:
+            return subprocess.Popen(["caffeinate", "-i"])
+        except FileNotFoundError:
+            return None
+    elif sys.platform == "win32":
+        # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000003)
+        return "windows"
+    elif sys.platform.startswith("linux"):
+        try:
+            return subprocess.Popen(
+                ["systemd-inhibit", "--what=sleep", "--who=RadiopaediaAnki",
+                 "--why=Downloading deck", "--mode=block", "sleep", "infinity"]
+            )
+        except FileNotFoundError:
+            return None
+    return None
+
+
+def _allow_sleep(handle) -> None:
+    """Release the sleep-prevention lock acquired by _prevent_sleep()."""
+    if handle == "windows":
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)  # ES_CONTINUOUS only
+    elif handle is not None:
+        handle.terminate()
+
+
+# ---------------------------------------------------------------------------
 # Background worker
 # ---------------------------------------------------------------------------
 
 def _run_job(job_id: str, folder_title: str,
              article_urls: list[str], case_urls: list[str],
-             max_cases_per_article: int | None = None) -> None:
+             max_cases_per_article: int | None = None,
+             cases_from_articles: bool = False,
+             max_quiz_cases_per_article: int | None = None) -> None:
     """Runs in a daemon thread. Puts SSE events onto the job queue."""
     job = jobs[job_id]
     q   = job["queue"]
     tmp = job["tmp_dir"]
+
+    # Prevent the OS from sleeping while the job runs (macOS / Windows / Linux)
+    _wake_handle = _prevent_sleep()
 
     def cb(msg: dict) -> None:
         q.put(msg)
@@ -69,6 +110,13 @@ def _run_job(job_id: str, folder_title: str,
                                     progress_cb=cb, webp=True,
                                     max_cases=max_cases_per_article)
             article_data_list.append(result)
+            if cases_from_articles:
+                groups = result.get("linked_case_groups", [])
+                if max_quiz_cases_per_article is not None:
+                    groups = groups[:max_quiz_cases_per_article]
+                for group in groups:
+                    if group:
+                        case_data_list.append(group)
             cb({"type": "item_done",
                 "message": f"Article {result['rid']} \u2014 {result['plain_title']}"})
             done += 1
@@ -112,6 +160,8 @@ def _run_job(job_id: str, folder_title: str,
         cb({"type": "error", "message": str(exc)})
 
     finally:
+        _allow_sleep(_wake_handle)
+
         # Schedule cleanup after CLEANUP_DELAY_S
         def _cleanup() -> None:
             time.sleep(CLEANUP_DELAY_S)
@@ -143,6 +193,13 @@ def start():
             max_cases_per_article = None   # 0 or negative = unlimited
     except (ValueError, TypeError):
         max_cases_per_article = 4
+    cases_from_articles = request.form.get("cases_from_articles") == "1"
+    try:
+        max_quiz_cases_per_article = int(request.form.get("max_quiz_cases_per_article", 4))
+        if max_quiz_cases_per_article < 1:
+            max_quiz_cases_per_article = None   # 0 = all
+    except (ValueError, TypeError):
+        max_quiz_cases_per_article = 4
 
     if not folder_title:
         return jsonify({"error": "Deck folder title is required."}), 400
@@ -169,7 +226,9 @@ def start():
 
     threading.Thread(
         target=_run_job,
-        args=(job_id, folder_title, article_urls, case_urls, max_cases_per_article),
+        args=(job_id, folder_title, article_urls, case_urls,
+              max_cases_per_article, cases_from_articles,
+              max_quiz_cases_per_article),
         daemon=True,
     ).start()
 

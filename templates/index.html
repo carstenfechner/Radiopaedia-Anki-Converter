@@ -120,6 +120,80 @@
       color: var(--text-dim);
     }
 
+    /* ---- Checkbox row ---- */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 11px;
+    }
+    .checkbox-row input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .checkbox-row input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .checkbox-row input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 4px; top: 1px;
+      width: 5px; height: 9px;
+      border: 2px solid #000;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+    .checkbox-row input[type="checkbox"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .checkbox-row label {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .checkbox-row .quiz-limit {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-left: 4px;
+    }
+    .checkbox-row .quiz-limit.visible { display: flex; }
+    .checkbox-row .quiz-limit input[type="number"] {
+      width: 56px;
+      height: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      padding: 0 8px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+    .checkbox-row .quiz-limit input[type="number"]:focus { border-color: var(--accent); }
+    .checkbox-row .quiz-limit input[type="number"]::-webkit-inner-spin-button,
+    .checkbox-row .quiz-limit input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .checkbox-row .quiz-limit .hint { font-size: 0.78rem; color: var(--text-dim); }
+
     /* ---- Two-column URL panel ---- */
     .url-panels {
       display: grid;
@@ -274,6 +348,16 @@
                    value="4" min="0" step="1">
             <span class="hint">(0 = unlimited)</span>
           </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="cases_from_articles" name="cases_from_articles" value="1">
+            <label for="cases_from_articles">Also add article cases to Quiz deck</label>
+            <div class="quiz-limit" id="quiz-limit-wrap">
+              <span class="hint">— max</span>
+              <input type="number" id="max_quiz_cases_per_article" name="max_quiz_cases_per_article"
+                     value="4" min="0" step="1">
+              <span class="hint">(0 = all)</span>
+            </div>
+          </div>
         </div>
         <div>
           <div class="url-panel-header">
@@ -326,6 +410,13 @@
 
   <script>
   (() => {
+    // Toggle quiz-limit visibility with checkbox
+    const quizCb    = document.getElementById('cases_from_articles');
+    const quizLimit = document.getElementById('quiz-limit-wrap');
+    quizCb.addEventListener('change', () => {
+      quizLimit.classList.toggle('visible', quizCb.checked);
+    });
+
     const form         = document.getElementById('job-form');
     const submitBtn    = document.getElementById('submit-btn');
     const progressSec  = document.getElementById('progress-section');
