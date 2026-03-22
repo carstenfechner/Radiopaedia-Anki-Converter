@@ -106,7 +106,7 @@ def _run_job(job_id: str, folder_title: str,
                 "pct": int(done / total * 88)})
             with _playwright_sem:
                 result = dl_article(url=url, output_dir=tmp,
-                                    headed=False, delay_ms=500,
+                                    headed=False, delay_ms=200,
                                     progress_cb=cb, webp=True,
                                     max_cases=max_cases_per_article)
             article_data_list.append(result)
@@ -128,7 +128,7 @@ def _run_job(job_id: str, folder_title: str,
                 "pct": int(done / total * 88)})
             with _playwright_sem:
                 results = dl_run(case_url=url, output_dir=tmp,
-                                 delay_ms=500, headed=False,
+                                 delay_ms=200, headed=False,
                                  filter_series=None, progress_cb=cb,
                                  webp=True)
             case_data_list.append(results)   # one group (list) per URL → one card

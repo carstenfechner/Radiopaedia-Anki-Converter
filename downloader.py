@@ -24,6 +24,7 @@ import argparse
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -220,7 +221,7 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
 
         print(f"Opening browser{'  (headed)' if headed else ' (headless)'}...")
         print(f"Loading: {url}")
-        page.goto(url, wait_until="networkidle", timeout=90000)
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
         if "/users/sign_in" in page.url:
             browser.close()
@@ -400,12 +401,16 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
 
         print(f"Opening browser{'  (headed)' if headed else ' (headless)'}...")
         print(f"Loading: {case_url}")
-        page.goto(case_url, wait_until="networkidle", timeout=90000)
+        page.goto(case_url, wait_until="domcontentloaded", timeout=60000)
 
         if "/users/sign_in" in page.url:
             browser.close()
             raise RuntimeError("Radiopaedia requires login for this case.")
 
+        # Wait until viewer JSON is captured (or 15 s max), then honour delay_ms
+        deadline = time.time() + 15
+        while not all_viewer_jsons and time.time() < deadline:
+            page.wait_for_timeout(200)
         time.sleep(delay_ms / 1000.0)
 
         if not all_viewer_jsons:
@@ -533,44 +538,51 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
             print(f"\nDownloading: {series.name} ({sum(1 for u in series.urls if u)} images)"
                   + (f"  [→ WebP q={WEBP_QUALITY}]" if final_ext == "webp" else ""))
 
-            with tqdm(total=len(series.urls), desc=f"  {series.name}", unit="img") as pbar:
-                for idx, url in enumerate(series.urls, start=1):
-                    # Files named {study_id}_{safe_series}_{idx:03d}.{final_ext}
-                    filename = f"{study_id}_{sname}_{idx:03d}.{final_ext}"
-                    dest = case_dir / filename
+            def _download_one(args):
+                idx, url, dest, raw_ext, final_ext = args
+                filename = dest.name
+                if dest.exists():
+                    return "ok"
+                if url is None:
+                    return "skip"
+                for attempt in range(3):
+                    try:
+                        resp = session.get(url, timeout=30, stream=True)
+                        resp.raise_for_status()
+                        if final_ext == "webp":
+                            tmp_dest = dest.with_suffix("." + raw_ext)
+                            tmp_dest.write_bytes(resp.content)
+                            try:
+                                convert_to_webp(tmp_dest)
+                            except Exception as conv_err:
+                                print(f"\n  WebP conversion failed for {filename}: {conv_err}")
+                                tmp_dest.rename(dest.with_suffix("." + raw_ext))
+                                effective_ext[series.series_id] = raw_ext
+                        else:
+                            dest.write_bytes(resp.content)
+                        return "ok"
+                    except Exception as e:
+                        if attempt < 2:
+                            time.sleep(2 ** attempt)
+                        else:
+                            print(f"\n  Failed: {filename}: {e}")
+                return "fail"
 
-                    if dest.exists():
-                        total_ok += 1; pbar.update(1); continue
-                    if url is None:
-                        total_skip += 1; pbar.update(1); continue
+            tasks = [
+                (idx, url,
+                 case_dir / f"{study_id}_{sname}_{idx:03d}.{final_ext}",
+                 raw_ext, final_ext)
+                for idx, url in enumerate(series.urls, start=1)
+            ]
 
-                    success = False
-                    for attempt in range(3):
-                        try:
-                            resp = session.get(url, timeout=30, stream=True)
-                            resp.raise_for_status()
-                            if final_ext == "webp":
-                                # Write original first, then convert
-                                tmp_dest = dest.with_suffix("." + raw_ext)
-                                tmp_dest.write_bytes(resp.content)
-                                try:
-                                    convert_to_webp(tmp_dest)
-                                except Exception as conv_err:
-                                    # Conversion failed — keep original format
-                                    print(f"\n  WebP conversion failed for {filename}: {conv_err}")
-                                    tmp_dest.rename(dest.with_suffix("." + raw_ext))
-                                    effective_ext[series.series_id] = raw_ext
-                            else:
-                                dest.write_bytes(resp.content)
-                            success = True; break
-                        except Exception as e:
-                            if attempt < 2:
-                                time.sleep(2 ** attempt)
-                            else:
-                                print(f"\n  Failed: {filename}: {e}")
-                    total_ok += 1 if success else 0
-                    total_skip += 0 if success else 1
-                    pbar.update(1)
+            with tqdm(total=len(tasks), desc=f"  {series.name}", unit="img") as pbar:
+                with ThreadPoolExecutor(max_workers=6) as pool:
+                    for result in pool.map(_download_one, tasks):
+                        if result == "ok":
+                            total_ok += 1
+                        else:
+                            total_skip += 1
+                        pbar.update(1)
 
         print(f"\nDone. {total_ok} downloaded"
               + (f", {total_skip} skipped" if total_skip else "")
