@@ -208,7 +208,8 @@ def find_linked_case_urls(page) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
-                     progress_cb=None, webp: bool = True) -> dict:
+                     progress_cb=None, webp: bool = True,
+                     max_cases: int | None = None) -> dict:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not headed)
         context = browser.new_context(
@@ -285,6 +286,13 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
     linked_cases: list[dict] = []   # list of run() return dicts
 
     if linked_case_urls:
+        if max_cases is not None and max_cases > 0:
+            if len(linked_case_urls) > max_cases:
+                print(f"Limiting to {max_cases} of {len(linked_case_urls)} linked cases.")
+                if progress_cb:
+                    progress_cb({"type": "progress",
+                                 "message": f"  Limiting to {max_cases} of {len(linked_case_urls)} linked cases"})
+            linked_case_urls = linked_case_urls[:max_cases]
         print()
         for i, case_url in enumerate(linked_case_urls, start=1):
             slug = case_url.rstrip("/").split("/")[-1]

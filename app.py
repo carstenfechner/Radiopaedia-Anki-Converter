@@ -38,7 +38,8 @@ _playwright_sem = threading.Semaphore(3)   # max 3 concurrent Chromium instances
 # ---------------------------------------------------------------------------
 
 def _run_job(job_id: str, folder_title: str,
-             article_urls: list[str], case_urls: list[str]) -> None:
+             article_urls: list[str], case_urls: list[str],
+             max_cases_per_article: int | None = None) -> None:
     """Runs in a daemon thread. Puts SSE events onto the job queue."""
     job = jobs[job_id]
     q   = job["queue"]
@@ -65,7 +66,8 @@ def _run_job(job_id: str, folder_title: str,
             with _playwright_sem:
                 result = dl_article(url=url, output_dir=tmp,
                                     headed=False, delay_ms=500,
-                                    progress_cb=cb, webp=True)
+                                    progress_cb=cb, webp=True,
+                                    max_cases=max_cases_per_article)
             article_data_list.append(result)
             cb({"type": "item_done",
                 "message": f"Article {result['rid']} \u2014 {result['plain_title']}"})
@@ -135,6 +137,12 @@ def start():
                      if u.strip()]
     case_urls     = [u.strip() for u in request.form.get("case_urls", "").splitlines()
                      if u.strip()]
+    try:
+        max_cases_per_article = int(request.form.get("max_cases_per_article", 4))
+        if max_cases_per_article < 1:
+            max_cases_per_article = None   # 0 or negative = unlimited
+    except (ValueError, TypeError):
+        max_cases_per_article = 4
 
     if not folder_title:
         return jsonify({"error": "Deck folder title is required."}), 400
@@ -161,7 +169,7 @@ def start():
 
     threading.Thread(
         target=_run_job,
-        args=(job_id, folder_title, article_urls, case_urls),
+        args=(job_id, folder_title, article_urls, case_urls, max_cases_per_article),
         daemon=True,
     ).start()
 

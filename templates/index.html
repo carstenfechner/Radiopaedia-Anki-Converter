@@ -81,9 +81,44 @@
     input[type="text"]:focus, textarea:focus {
       border-color: var(--accent);
     }
-    input[type="text"] { height: 42px; resize: none; }
-    textarea           { height: 150px; }
-    ::placeholder      { color: #444; }
+    input[type="text"]   { height: 42px; resize: none; }
+    textarea             { height: 150px; }
+    ::placeholder        { color: #444; }
+
+    /* ---- Max cases row ---- */
+    .max-cases-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .max-cases-row label { margin: 0; white-space: nowrap; }
+    .max-cases-row input[type="number"] {
+      width: 68px;
+      height: 34px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.93rem;
+      padding: 0 10px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+    .max-cases-row input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+    .max-cases-row input[type="number"]::-webkit-inner-spin-button,
+    .max-cases-row input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+    .max-cases-row .hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
 
     /* ---- Two-column URL panel ---- */
     .url-panels {
@@ -233,6 +268,12 @@
           </div>
           <textarea id="article_urls" name="article_urls"
             placeholder="https://radiopaedia.org/articles/lamina-papyracea-dehiscence&#10;https://radiopaedia.org/articles/..."></textarea>
+          <div class="max-cases-row">
+            <label for="max_cases_per_article">Max cases per article</label>
+            <input type="number" id="max_cases_per_article" name="max_cases_per_article"
+                   value="4" min="0" step="1">
+            <span class="hint">(0 = unlimited)</span>
+          </div>
         </div>
         <div>
           <div class="url-panel-header">
