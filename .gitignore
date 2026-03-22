@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+*.apkg
+*.zip
+.env
+downloads/
