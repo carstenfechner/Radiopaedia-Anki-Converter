@@ -23,8 +23,10 @@ from pathlib import Path
 
 from flask import (Flask, Response, jsonify, render_template,
                    request, send_file, stream_with_context)
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/start": {}, r"/progress/*": {}, r"/download/*": {}})
 
 # ---------------------------------------------------------------------------
 # Job registry  (in-memory — requires single worker process)
@@ -194,6 +196,14 @@ def _run_job(job_id: str, folder_title: str,
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/preview")
+def preview():
+    from anki_builder import CASE_CSS
+    return render_template("preview.html",
+                           case_css=CASE_CSS,
+                           side=request.args.get("side", "back"))
 
 
 @app.route("/start", methods=["POST"])

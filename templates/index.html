@@ -105,6 +105,14 @@
       padding: 44px 20px 72px;
     }
 
+    /* ─── Flow title arrow ─── */
+    .title-arrow {
+      font-weight: 200;
+      color: rgba(242,242,242,0.25);
+      margin: 0 0.2em;
+      letter-spacing: 0;
+    }
+
     /* ─── Page header ─── */
     .page-header { margin-bottom: 24px; }
     .page-header h1 {
@@ -453,6 +461,52 @@
     }
     .footer-meta a { color: var(--muted); text-decoration: none; transition: color 0.12s; }
     .footer-meta a:hover { color: var(--fg); }
+
+    /* ─── Preview ─── */
+    .preview-section {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 52px 16px 0;
+    }
+    .preview-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(242,242,242,0.25);
+      margin-bottom: 20px;
+    }
+    .preview-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .preview-col-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: -0.01em;
+      margin-bottom: 3px;
+    }
+    .preview-col-sub {
+      font-size: 0.7rem;
+      color: rgba(242,242,242,0.32);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .preview-col-frame-wrap {
+      border-radius: var(--r);
+      overflow: hidden;
+      background: #1a1a1a;
+      box-shadow: 0 0 0 0.5px rgba(242,242,242,0.07),
+                  0 4px 28px rgba(0,0,0,0.55);
+    }
+    .preview-col iframe {
+      display: block;
+      border: none;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -479,7 +533,7 @@
   <!-- ── Main ── -->
   <main class="page">
     <div class="page-header">
-      <h1>Anki Deck Builder</h1>
+      <h1>Radiopaedia<span class="title-arrow">→</span>Anki</h1>
       <p>Scrape Radiopaedia articles &amp; cases and export a ready-to-import <code>.apkg</code> flashcard deck.</p>
     </div>
 
@@ -580,6 +634,32 @@
     </div>
   </main>
 
+  <!-- ── Card Preview ── -->
+  <section class="preview-section" aria-label="Sample card preview">
+    <p class="preview-eyebrow">Card Preview</p>
+    <div class="preview-columns">
+
+      <div class="preview-col">
+        <div class="preview-col-title">Question</div>
+        <div class="preview-col-sub">Imaging only — no diagnosis shown</div>
+        <div class="preview-col-frame-wrap">
+          <iframe id="preview-front" src="/preview?side=front"
+                  height="0" scrolling="no" title="Question side preview"></iframe>
+        </div>
+      </div>
+
+      <div class="preview-col">
+        <div class="preview-col-title">Answer</div>
+        <div class="preview-col-sub">Diagnosis, findings &amp; viewer revealed</div>
+        <div class="preview-col-frame-wrap">
+          <iframe id="preview-back" src="/preview?side=back"
+                  height="0" scrolling="no" title="Answer side preview"></iframe>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="footer-inner">
@@ -600,6 +680,15 @@
   </footer>
 
   <script>
+  // Auto-size each preview iframe to its content height
+  window.addEventListener('message', (e) => {
+    if (e.data?.type !== 'previewHeight') return;
+    const front = document.getElementById('preview-front');
+    const back  = document.getElementById('preview-back');
+    if (front && e.source === front.contentWindow) front.height = e.data.height;
+    if (back  && e.source === back.contentWindow)  back.height  = e.data.height;
+  });
+
   (() => {
     const quizCb    = document.getElementById('cases_from_articles');
     const quizLimit = document.getElementById('quiz-limit-wrap');
