@@ -11,24 +11,22 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #1a1a1a;
-      --surface:  #282828;
-      --surface2: #363636;
-      --border:   rgba(242,242,242,0.08);
-      --border-s: #3a3a3a;
-      --primary:  #c8392b;
-      --fg:       #f2f2f2;
-      --muted:    #8a8a8e;
-      --success:  #30d158;
-      --error:    #ff453a;
-      --r:        12px;
-      --r-sm:     8px;
-      --font:     -apple-system, BlinkMacSystemFont, "Inria Sans", ui-sans-serif, system-ui, sans-serif;
+      --bg:      #1a1a1a;
+      --surface: #282828;
+      --s2:      #323232;
+      --border:  rgba(242,242,242,0.08);
+      --border-s:#3a3a3a;
+      --fg:      #f2f2f2;
+      --muted:   #8a8a8e;
+      --dim:     rgba(242,242,242,0.32);
+      --success: #30d158;
+      --error:   #ff453a;
+      --r:       12px;
+      --r-sm:    8px;
+      --font:    -apple-system, BlinkMacSystemFont, "Inria Sans", ui-sans-serif, system-ui, sans-serif;
     }
 
-    html, body {
-      height: 100%;
-    }
+    html, body { height: 100%; }
     body {
       font-family: var(--font);
       background: var(--bg);
@@ -82,11 +80,7 @@
       margin: 0 8px;
       flex-shrink: 0;
     }
-    .topbar-nav {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
     .nav-link {
       display: inline-flex;
       align-items: center;
@@ -142,13 +136,19 @@
       padding: 24px;
     }
 
-    /* ─── Field label ─── */
+    /* ─── Labels & descriptions ─── */
     .fl {
       display: block;
       font-size: 0.8rem;
       font-weight: 500;
       color: var(--muted);
       margin-bottom: 6px;
+    }
+    .field-desc {
+      font-size: 0.72rem;
+      color: rgba(242,242,242,0.28);
+      margin-top: 5px;
+      line-height: 1.45;
     }
 
     /* ─── Text inputs ─── */
@@ -166,16 +166,16 @@
       resize: vertical;
     }
     input[type="text"]:focus, textarea:focus {
-      border-color: rgba(200,57,43,0.45);
-      box-shadow: 0 0 0 3px rgba(200,57,43,0.14);
+      border-color: rgba(242,242,242,0.28);
+      box-shadow: 0 0 0 3px rgba(242,242,242,0.07);
     }
     input[type="text"] { height: 36px; resize: none; }
-    textarea           { height: 140px; }
-    ::placeholder      { color: rgba(242,242,242,0.18); }
+    textarea { height: 130px; }
+    ::placeholder { color: rgba(242,242,242,0.18); }
 
     /* ─── Number inputs ─── */
     input[type="number"] {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
       border-radius: 7px;
       color: var(--fg);
@@ -187,13 +187,13 @@
       -moz-appearance: textfield;
     }
     input[type="number"]:focus {
-      border-color: rgba(200,57,43,0.45);
-      box-shadow: 0 0 0 3px rgba(200,57,43,0.14);
+      border-color: rgba(242,242,242,0.28);
+      box-shadow: 0 0 0 3px rgba(242,242,242,0.07);
     }
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-    /* ─── URL panels (2-col grid) ─── */
+    /* ─── URL panels (2-col) ─── */
     .url-panels {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -217,67 +217,127 @@
       border-radius: 10px;
       background: rgba(242,242,242,0.07);
       color: var(--muted);
-      letter-spacing: 0.1px;
     }
 
-    /* ─── Field row (inline label + number + hint) ─── */
-    .field-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* ─── Article options panel ─── */
+    .article-opts {
       margin-top: 10px;
+      padding: 13px 14px;
+      background: rgba(242,242,242,0.025);
+      border: 1px solid rgba(242,242,242,0.06);
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
     }
-    .field-row .fl { margin: 0; white-space: nowrap; }
-    .field-row input[type="number"] { width: 60px; height: 30px; padding: 0 8px; }
-    .hint { font-size: 0.75rem; color: var(--muted); }
 
-    /* ─── Checkbox row ─── */
-    .checkbox-row {
+    /* Cases in viewer row */
+    .opt-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 10px;
     }
-    .checkbox-row input[type="checkbox"] {
+    .opt-row input[type="number"] {
+      width: 52px;
+      height: 28px;
+      flex-shrink: 0;
+      padding: 0 6px;
+      border-radius: 7px;
+      margin-top: 1px;
+    }
+    .opt-text { flex: 1; }
+    .opt-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg);
+      opacity: 0.75;
+      line-height: 1.3;
+    }
+    .opt-hint {
+      font-size: 0.72rem;
+      color: rgba(242,242,242,0.28);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* Quiz cards checkbox opt */
+    .opt-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+    .opt-check input[type="checkbox"] {
       appearance: none;
       -webkit-appearance: none;
-      width: 15px; height: 15px;
+      width: 15px;
+      height: 15px;
       flex-shrink: 0;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border-s);
+      margin-top: 2px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(242,242,242,0.2);
       border-radius: 4px;
       cursor: pointer;
       position: relative;
       transition: background 0.12s, border-color 0.12s;
     }
-    .checkbox-row input[type="checkbox"]:checked {
-      background: var(--primary);
-      border-color: var(--primary);
+    .opt-check input[type="checkbox"]:checked {
+      background: rgba(242,242,242,0.88);
+      border-color: transparent;
     }
-    .checkbox-row input[type="checkbox"]:checked::after {
+    .opt-check input[type="checkbox"]:checked::after {
       content: "";
       position: absolute;
       left: 3px; top: 0px;
       width: 5px; height: 9px;
-      border: 2px solid #fff;
-      border-top: none; border-left: none;
+      border: 2px solid #1a1a1a;
+      border-top: none;
+      border-left: none;
       transform: rotate(45deg);
     }
-    .cb-label {
+    .opt-check-body { flex: 1; }
+    .opt-check-label {
       font-size: 0.8rem;
-      color: var(--muted);
+      font-weight: 500;
+      color: var(--fg);
+      opacity: 0.75;
       cursor: pointer;
+      line-height: 1.3;
+    }
+    .opt-check-desc {
+      font-size: 0.72rem;
+      color: rgba(242,242,242,0.28);
+      margin-top: 2px;
+      line-height: 1.4;
     }
     .quiz-limit {
       display: none;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(242,242,242,0.06);
     }
     .quiz-limit.visible { display: flex; }
-    .quiz-limit input[type="number"] { width: 50px; height: 26px; padding: 0 6px; border-radius: 6px; }
+    .quiz-limit input[type="number"] {
+      width: 48px;
+      height: 26px;
+      padding: 0 5px;
+      border-radius: 6px;
+    }
+    .quiz-limit .ql-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
 
-    /* ─── Primary submit button ─── */
+    /* ─── Case panel (right col, no options) ─── */
+    .case-panel-desc {
+      font-size: 0.72rem;
+      color: rgba(242,242,242,0.28);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    /* ─── Submit button (white) ─── */
     .btn-primary {
       display: inline-flex;
       align-items: center;
@@ -286,8 +346,8 @@
       width: 100%;
       height: 38px;
       margin-top: 20px;
-      background: var(--primary);
-      color: #fff;
+      background: rgba(242,242,242,0.92);
+      color: #111;
       font-family: var(--font);
       font-size: 0.875rem;
       font-weight: 600;
@@ -297,9 +357,9 @@
       transition: background 0.15s, opacity 0.15s, transform 0.1s;
       -webkit-font-smoothing: antialiased;
     }
-    .btn-primary:hover    { background: #d4443c; }
+    .btn-primary:hover    { background: rgba(242,242,242,1); }
     .btn-primary:active   { transform: translateY(1px); }
-    .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
+    .btn-primary:disabled { opacity: 0.28; cursor: not-allowed; transform: none; }
 
     /* ─── Progress ─── */
     #progress-section { display: none; margin-top: 22px; }
@@ -314,7 +374,7 @@
     }
     .progress-bar-fill {
       height: 100%;
-      background: var(--primary);
+      background: rgba(242,242,242,0.6);
       border-radius: 1px;
       width: 0%;
       transition: width 0.4s ease;
@@ -337,7 +397,7 @@
     }
     .log-line.active { color: var(--fg); background: rgba(242,242,242,0.03); }
     .log-line.done   { color: var(--success); }
-    .log-line.error  { color: var(--error);   background: rgba(255,69,58,0.05); }
+    .log-line.error  { color: var(--error); background: rgba(255,69,58,0.05); }
 
     /* ─── Download ─── */
     #download-section { display: none; margin-top: 14px; }
@@ -347,7 +407,7 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      height: 42px;
+      height: 40px;
       background: rgba(242,242,242,0.05);
       color: var(--fg);
       font-family: var(--font);
@@ -382,7 +442,7 @@
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--fg);
-      opacity: 0.55;
+      opacity: 0.5;
     }
     .footer-meta {
       display: flex;
@@ -427,50 +487,69 @@
       <form id="job-form" autocomplete="off">
 
         <!-- Deck title -->
-        <label class="fl" for="folder_title">Deck folder title</label>
+        <label class="fl" for="folder_title">Deck name</label>
         <input type="text" id="folder_title" name="folder_title"
                placeholder="e.g. Neuroradiology" required>
 
         <!-- URL panels -->
         <div class="url-panels">
+
+          <!-- Left: Articles -->
           <div>
             <div class="panel-header">
               <label class="fl" for="article_urls">Article URLs</label>
               <span class="badge">Articles</span>
             </div>
             <textarea id="article_urls" name="article_urls"
-              placeholder="https://radiopaedia.org/articles/lamina-papyracea-dehiscence&#10;https://radiopaedia.org/articles/..."></textarea>
-            <div class="field-row">
-              <label class="fl" for="max_cases_per_article">Max cases per article</label>
-              <input type="number" id="max_cases_per_article" name="max_cases_per_article"
-                     value="4" min="0" step="1">
-              <span class="hint">0 = unlimited</span>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="cases_from_articles" name="cases_from_articles" value="1">
-              <label class="cb-label" for="cases_from_articles">Also add article cases to Quiz deck</label>
-              <div class="quiz-limit" id="quiz-limit-wrap">
-                <span class="hint">— max</span>
-                <input type="number" id="max_quiz_cases_per_article" name="max_quiz_cases_per_article"
+              placeholder="https://radiopaedia.org/articles/glioblastoma-idh-wildtype&#10;One URL per line"></textarea>
+
+            <!-- Article options panel -->
+            <div class="article-opts">
+
+              <!-- Cases in viewer -->
+              <div class="opt-row">
+                <input type="number" id="max_cases_per_article" name="max_cases_per_article"
                        value="4" min="0" step="1">
-                <span class="hint">0 = all</span>
+                <div class="opt-text">
+                  <div class="opt-label">Cases embedded per article card</div>
+                  <div class="opt-hint">How many linked cases appear in the image viewer on each article card. Set to 0 for no limit.</div>
+                </div>
               </div>
+
+              <!-- Quiz cards toggle -->
+              <div class="opt-check">
+                <input type="checkbox" id="cases_from_articles" name="cases_from_articles" value="1">
+                <div class="opt-check-body">
+                  <label class="opt-check-label" for="cases_from_articles">Also create standalone quiz cards</label>
+                  <div class="opt-check-desc">Each linked case additionally gets its own card in the Quiz deck — useful for image-based recall practice.</div>
+                  <div class="quiz-limit" id="quiz-limit-wrap">
+                    <span class="ql-label">Up to</span>
+                    <input type="number" id="max_quiz_cases_per_article" name="max_quiz_cases_per_article"
+                           value="4" min="0" step="1">
+                    <span class="ql-label">quiz cards per article &nbsp;·&nbsp; 0 = all</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
+          <!-- Right: Cases -->
           <div>
             <div class="panel-header">
               <label class="fl" for="case_urls">Case URLs</label>
               <span class="badge">Cases</span>
             </div>
             <textarea id="case_urls" name="case_urls"
-              placeholder="https://radiopaedia.org/cases/creutzfeldt-jakob-disease&#10;https://radiopaedia.org/cases/..."></textarea>
+              placeholder="https://radiopaedia.org/cases/glioblastoma-nos-1&#10;One URL per line"></textarea>
+            <p class="case-panel-desc">Each case URL creates one standalone quiz card in the Quiz deck with a scrollable image viewer.</p>
           </div>
+
         </div>
 
         <button class="btn-primary" type="submit" id="submit-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
           Create Anki Deck
@@ -539,8 +618,9 @@
 
     let es = null;
 
-    const ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-    const ICON_DL   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    const BTN_DEFAULT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Create Anki Deck';
+    const BTN_ANOTHER = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Create Another Deck';
+    const BTN_RETRY   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Try Again';
 
     function addLog(text, cls) {
       const el = document.createElement('div');
@@ -573,7 +653,7 @@
       } catch (err) {
         addLog('Network error: ' + err.message, 'error');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = ICON_PLAY + ' Create Anki Deck';
+        submitBtn.innerHTML = BTN_DEFAULT;
         return;
       }
 
@@ -581,7 +661,7 @@
         if (activeLogLine) activeLogLine.remove();
         addLog('Error: ' + data.error, 'error');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = ICON_PLAY + ' Create Anki Deck';
+        submitBtn.innerHTML = BTN_DEFAULT;
         return;
       }
 
@@ -597,14 +677,12 @@
           if (msg.pct !== undefined) progressBar.style.width = msg.pct + '%';
           return;
         }
-
         if (msg.type === 'item_done') {
           if (activeLogLine) { activeLogLine.className = 'log-line done'; }
           activeLogLine = null;
           addLog('✓ ' + msg.message, 'done');
           return;
         }
-
         if (msg.type === 'done') {
           progressBar.style.width = '100%';
           if (activeLogLine) { activeLogLine.className = 'log-line done'; activeLogLine = null; }
@@ -614,16 +692,15 @@
           downloadSec.style.display = 'block';
           downloadLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           submitBtn.disabled = false;
-          submitBtn.innerHTML = ICON_PLAY + ' Create Another Deck';
+          submitBtn.innerHTML = BTN_ANOTHER;
           es.close();
           return;
         }
-
         if (msg.type === 'error') {
           if (activeLogLine) { activeLogLine.className = 'log-line error'; activeLogLine = null; }
           addLog('✗ ' + msg.message, 'error');
           submitBtn.disabled = false;
-          submitBtn.innerHTML = ICON_PLAY + ' Try Again';
+          submitBtn.innerHTML = BTN_RETRY;
           es.close();
         }
       };
