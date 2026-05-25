@@ -187,7 +187,7 @@ def find_linked_case_urls(page) -> list[str]:
 
         // Strategy 3: partial class substring match
         const all = Array.from(document.querySelectorAll('[class]'));
-        const partial = all.find(el => el.className.includes('_2tl3bx1'));
+        const partial = all.find(el => String(el.className).includes('_2tl3bx1'));
         if (partial) return caseLinks(partial);
 
         return [];
@@ -221,12 +221,14 @@ def download_article(url: str, output_dir: Path, headed: bool, delay_ms: int,
 
         print(f"Opening browser{'  (headed)' if headed else ' (headless)'}...")
         print(f"Loading: {url}")
-        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.goto(url, wait_until="load", timeout=60000)
 
         if "/users/sign_in" in page.url:
             browser.close()
             raise RuntimeError("Radiopaedia requires login for this article.")
 
+        # Give JS a moment to render dynamic content (case links etc.)
+        page.wait_for_timeout(2000)
         time.sleep(delay_ms / 1000.0)
 
         # Extract rID from the citation block's rid row
@@ -401,16 +403,16 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
 
         print(f"Opening browser{'  (headed)' if headed else ' (headless)'}...")
         print(f"Loading: {case_url}")
-        page.goto(case_url, wait_until="domcontentloaded", timeout=60000)
+        page.goto(case_url, wait_until="load", timeout=60000)
 
         if "/users/sign_in" in page.url:
             browser.close()
             raise RuntimeError("Radiopaedia requires login for this case.")
 
-        # Wait until viewer JSON is captured (or 15 s max), then honour delay_ms
-        deadline = time.time() + 15
+        # Wait until viewer JSON is captured (or 20s max), then honour delay_ms
+        deadline = time.time() + 20
         while not all_viewer_jsons and time.time() < deadline:
-            page.wait_for_timeout(200)
+            page.wait_for_timeout(300)
         time.sleep(delay_ms / 1000.0)
 
         if not all_viewer_jsons:
@@ -453,6 +455,34 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
         page_findings_html = _get_html(page, ".study-findings, .body.sub-section")
         page_citation      = _get_text(page, ".citation-info .js-content")
         page_citation_html = _get_html(page, ".citation-info .js-content")
+
+        # Extract per-viewer heading and findings.
+        # Each #study-{id} header div is immediately followed (as a DOM sibling)
+        # by a div.study-findings that holds that viewer's description.
+        # Keys in the returned dict are strings (JSON serialisation of int keys).
+        viewer_meta: dict = page.evaluate("""() => {
+            const result = {};
+            for (const s of document.querySelectorAll('[id^="study-"]')) {
+                const sid = s.id.replace('study-', '');
+                if (!sid || isNaN(Number(sid))) continue;
+                const h2 = s.querySelector('.study-desc h2');
+                let findings_html = '';
+                let el = s.nextElementSibling;
+                while (el) {
+                    if (el.classList.contains('study-findings')) {
+                        findings_html = el.innerHTML.trim();
+                        break;
+                    }
+                    if (el.id && el.id.startsWith('study-')) break;
+                    el = el.nextElementSibling;
+                }
+                result[sid] = {
+                    heading: h2 ? h2.innerText.trim() : '',
+                    findings_html: findings_html
+                };
+            }
+            return result;
+        }""")
 
         browser.close()
 
@@ -608,13 +638,17 @@ def run(case_url: str, output_dir: Path, delay_ms: int, headed: bool,
         else:
             dominant_ext = "jpg"
 
+        # Per-viewer heading and findings (fall back to page-level if not found)
+        _vmeta = viewer_meta.get(str(study_id), {})
         results.append({
             "case_id":        str(study_id),   # unique per viewer — used for filenames
             "rid":            rid,              # rID of the case page (for display/GUID)
+            "title":          page_title,
+            "study_heading":  _vmeta.get("heading", ""),
             "series":         series_dicts,
             "output_dir":     case_dir,
             "file_extension": dominant_ext,
-            "findings_html":  page_findings_html,
+            "findings_html":  _vmeta.get("findings_html") or page_findings_html,
             "citation_html":  page_citation_html,
         })
 

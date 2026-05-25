@@ -7,6 +7,7 @@ Case cards     → deck  Quiz::{folder_title}
 """
 
 import hashlib
+import html as _html
 from pathlib import Path
 
 import genanki
@@ -150,6 +151,14 @@ _VIEWER_JS = """\
         activeSlice     = Math.floor(casesList[idx].series[0].maxSlices / 2) || 1;
         renderSeriesRibbon();
         updateViewport();
+        // Swap the per-viewer description when switching case tabs.
+        // Safe no-op on article cards (no #per-viewer-descriptions there).
+        const perViewerDescs = document.getElementById('per-viewer-descriptions');
+        const dispDesc = getLatestElement('#display-description');
+        if (perViewerDescs && dispDesc) {
+            const descDiv = perViewerDescs.querySelector('[data-desc-idx="' + idx + '"]');
+            if (descDiv) dispDesc.innerHTML = descDiv.innerHTML;
+        }
     }
 
     function selectSeries(idx) {
@@ -272,15 +281,40 @@ ARTICLE_FRONT = """\
 </script>"""
 
 ARTICLE_BACK = (
+    '<div id="raw-descriptions" style="display:none;">{{Descriptions}}</div>\n\n'
     "{{FrontSide}}\n\n<hr id=\"answer\">\n\n"
     + _VIEWER_HTML + "\n\n"
-    + """<div class="radiopaedia-wrapper case-description">
+    + """<div class="case-description" id="viewer-description" style="display:none;">
+  <div class="description-label">Description &amp; Findings</div>
+  <div id="display-description"></div>
+</div>
+
+<div class="radiopaedia-wrapper case-description">
   {{Content}}
 </div>
 
 <div class="powered-by">
     Powered by <strong>United Radiology</strong> \U0001f1e8\U0001f1ed
 </div>
+
+<script>
+(function () {
+    function getLatest(sel) {
+        var els = document.querySelectorAll(sel);
+        return els.length ? els[els.length - 1] : null;
+    }
+    var dispDesc       = getLatest('#display-description');
+    var wrapper        = getLatest('#viewer-description');
+    var perViewerDescs = getLatest('#per-viewer-descriptions');
+    if (perViewerDescs && dispDesc) {
+        var firstDesc = perViewerDescs.querySelector('[data-desc-idx="0"]');
+        if (firstDesc && firstDesc.textContent.trim()) {
+            dispDesc.innerHTML = firstDesc.innerHTML;
+            if (wrapper) wrapper.style.display = 'block';
+        }
+    }
+})();
+</script>
 
 """
     + _VIEWER_JS
@@ -369,6 +403,10 @@ a { color: #ff9800; text-decoration: none; border-bottom: 1px dotted #ff9800; }
 a:hover { color: #ffffff; border-bottom-style: solid; }
 
 strong { color: #ffffff; font-weight: bold; }
+
+.case-description { font-size: 16px; line-height: 1.6; max-width: 800px; margin: 0 auto 20px auto; padding: 15px 20px; background: #1e1e1e; border-radius: 8px; border-left: 4px solid #ff9800; color: #e0e0e0; }
+.description-label { font-size: 11px; text-transform: uppercase; color: #ff9800; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
+.viewer-heading { font-size: 11px; text-transform: uppercase; color: #aaa; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
 
 .article-citation {
     font-size: 11px;
@@ -460,6 +498,8 @@ CASE_BACK = """\
 
 <hr id="answer">
 
+<div class="case-title" id="display-title"></div>
+
 <div class="case-description">
     <div class="description-label">Description &amp; Findings</div>
     <div id="display-description"></div>
@@ -477,11 +517,22 @@ CASE_BACK = """\
         var els = document.querySelectorAll(sel);
         return els.length ? els[els.length - 1] : null;
     }
+    var rawTitle  = getLatest('#raw-title');
+    var dispTitle = getLatest('#display-title');
     var rawDesc   = getLatest('#raw-descriptions');
     var rawCit    = getLatest('#raw-citations');
     var dispDesc  = getLatest('#display-description');
     var dispCit   = getLatest('#display-citation');
-    if (rawDesc  && dispDesc) dispDesc.innerHTML = rawDesc.innerHTML;
+    if (rawTitle  && dispTitle) dispTitle.innerText = rawTitle.innerText;
+    // Show the first viewer's description on load.
+    // Falls back to the flat rawDesc for legacy single-viewer cards.
+    var perViewerDescs = getLatest('#per-viewer-descriptions');
+    if (perViewerDescs && dispDesc) {
+        var firstDesc = perViewerDescs.querySelector('[data-desc-idx="0"]');
+        if (firstDesc) dispDesc.innerHTML = firstDesc.innerHTML;
+    } else if (rawDesc && dispDesc) {
+        dispDesc.innerHTML = rawDesc.innerHTML;
+    }
     if (rawCit   && dispCit)  dispCit.innerHTML  = rawCit.innerHTML;
 })();
 </script>"""
@@ -503,6 +554,7 @@ hr#answer { border: 0; border-bottom: 1px solid #444; margin: 20px auto; max-wid
 .case-description { font-size: 16px; line-height: 1.6; text-align: left; max-width: 800px; margin: 0 auto 10px auto; padding: 15px 20px; background: #1e1e1e; border-radius: 8px; border-left: 4px solid #ff9800; color: #e0e0e0; }
 
 .description-label { font-size: 11px; text-transform: uppercase; color: #ff9800; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
+.viewer-heading { font-size: 11px; text-transform: uppercase; color: #aaa; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
 
 .case-reference, .article-citation { font-size: 11px; max-width: 800px; margin: 20px auto 5px auto; color: #666; border-top: 1px solid #333; padding-top: 15px; line-height: 1.5; }
 .case-reference .row, .article-citation .row { display: flex; flex-wrap: wrap; margin-bottom: 4px; }
@@ -557,6 +609,7 @@ ARTICLE_MODEL = genanki.Model(
         {"name": "Content"},
         {"name": "Cases Data"},
         {"name": "File Extension"},
+        {"name": "Descriptions"},
     ],
     templates=[{
         "name":  "Article Card",
@@ -687,9 +740,30 @@ def build_package(
         hidden   = _hidden_media_html(linked)
         content  = art["content_html"] + hidden
 
+        # Build per-linked-case descriptions for the article viewer.
+        # linked is a flat list of viewer dicts (one per viewer across all linked cases).
+        if linked:
+            desc_divs = []
+            for i, case in enumerate(linked):
+                heading = case.get("study_heading", "")
+                fhtml   = case.get("findings_html", "")
+                heading_html = (
+                    f'<div class="viewer-heading">{_html.escape(heading)}</div>'
+                    if heading else ""
+                )
+                desc_divs.append(
+                    f'<div data-desc-idx="{i}" style="display:none">'
+                    f'{heading_html}{fhtml}</div>'
+                )
+            descriptions = (
+                f'<div id="per-viewer-descriptions">{"".join(desc_divs)}</div>'
+            )
+        else:
+            descriptions = ""
+
         note = genanki.Note(
             model=ARTICLE_MODEL,
-            fields=[content, cd_str, file_ext],
+            fields=[content, cd_str, file_ext, descriptions],
             guid=genanki.guid_for(art["rid"]),
         )
         article_deck.add_note(note)
@@ -705,8 +779,26 @@ def build_package(
         cd_str   = _build_cases_data(group)
         file_ext = _dominant_ext(group)
         hidden   = _hidden_media_html(group)
-        # Findings and citation from the first sub-case (shared page metadata)
-        findings = group[0].get("findings_html", "") + hidden
+        # Build per-viewer description divs so the card can swap descriptions
+        # when the user switches between case tabs in the viewer.
+        title = _html.escape(group[0].get("title", ""))
+        desc_divs = []
+        for i, case in enumerate(group):
+            heading  = case.get("study_heading", "")
+            fhtml    = case.get("findings_html", "")
+            heading_html = (
+                f'<div class="viewer-heading">{_html.escape(heading)}</div>'
+                if heading else ""
+            )
+            desc_divs.append(
+                f'<div data-desc-idx="{i}" style="display:none">'
+                f'{heading_html}{fhtml}</div>'
+            )
+        findings = (
+            f'<div id="raw-title" style="display:none">{title}</div>'
+            + f'<div id="per-viewer-descriptions">{"".join(desc_divs)}</div>'
+            + hidden
+        )
         citation = group[0].get("citation_html", "")
         # GUID based on the rID of the first viewer (stable across re-imports)
         guid = genanki.guid_for(group[0].get("rid", group[0]["case_id"]))

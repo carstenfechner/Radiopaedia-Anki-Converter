@@ -104,12 +104,28 @@ def _run_job(job_id: str, folder_title: str,
             cb({"type": "progress",
                 "message": f"Downloading article {i}/{len(article_urls)}: {url}",
                 "pct": int(done / total * 88)})
+            # Download enough linked cases to satisfy BOTH limits independently.
+            # max_cases_per_article caps what appears in the article card;
+            # max_quiz_cases_per_article caps what goes into the quiz deck.
+            # We must download max(both) so neither limit silently clips the other.
+            if cases_from_articles:
+                both = [x for x in [max_cases_per_article, max_quiz_cases_per_article]
+                        if x is not None]
+                download_max = max(both) if both else None
+            else:
+                download_max = max_cases_per_article
             with _playwright_sem:
                 result = dl_article(url=url, output_dir=tmp,
                                     headed=False, delay_ms=200,
                                     progress_cb=cb, webp=True,
-                                    max_cases=max_cases_per_article)
-            article_data_list.append(result)
+                                    max_cases=download_max)
+            # Trim the article result's linked cases to the article-display limit
+            # before adding it to article_data_list (quiz uses the full result below).
+            article_result = dict(result)
+            if max_cases_per_article is not None:
+                article_result["linked_cases"]       = result["linked_cases"][:max_cases_per_article]
+                article_result["linked_case_groups"] = result["linked_case_groups"][:max_cases_per_article]
+            article_data_list.append(article_result)
             if cases_from_articles:
                 groups = result.get("linked_case_groups", [])
                 if max_quiz_cases_per_article is not None:
