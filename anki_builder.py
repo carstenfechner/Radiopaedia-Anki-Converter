@@ -322,9 +322,9 @@ ARTICLE_BACK = (
 
 ARTICLE_CSS = """\
 .card {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #000000;
-    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inria Sans", ui-sans-serif, sans-serif;
+    background-color: #1a1a1a;
+    color: #f2f2f2;
     margin: 0;
     padding: 10px;
     text-align: left;
@@ -332,7 +332,7 @@ ARTICLE_CSS = """\
 
 hr#answer {
     border: 0;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #3a3a3a;
     margin: 20px auto;
     max-width: 800px;
 }
@@ -349,7 +349,7 @@ hr#answer {
     max-width: 800px;
     margin: 5px auto 15px auto;
     padding-bottom: 8px;
-    border-bottom: 2px solid #ff9800;
+    border-bottom: 2px solid #c8392b;
     display: inline-block;
 }
 
@@ -371,24 +371,24 @@ h1.header-title {
     text-align: center;
     margin: 5px auto 15px auto;
     padding-bottom: 8px;
-    border-bottom: 2px solid #ff9800;
+    border-bottom: 2px solid #c8392b;
 }
 
 .article-body {
     font-size: 16px;
     line-height: 1.6;
     padding: 15px 20px;
-    background: #1e1e1e;
-    border-radius: 8px;
-    border-left: 4px solid #ff9800;
-    color: #e0e0e0;
+    background: #282828;
+    border-radius: 12px;
+    border-left: 4px solid #c8392b;
+    color: #f2f2f2;
     margin-bottom: 20px;
 }
 
 .section-title {
     font-size: 12px;
     text-transform: uppercase;
-    color: #ff9800;
+    color: #c8392b;
     font-weight: bold;
     margin-top: 25px;
     margin-bottom: 8px;
@@ -399,42 +399,42 @@ h1.header-title {
 p, ul { margin-top: 0; margin-bottom: 12px; }
 li { margin-bottom: 6px; }
 
-a { color: #ff9800; text-decoration: none; border-bottom: 1px dotted #ff9800; }
+a { color: #c8392b; text-decoration: none; border-bottom: 1px dotted #c8392b; }
 a:hover { color: #ffffff; border-bottom-style: solid; }
 
 strong { color: #ffffff; font-weight: bold; }
 
-.case-description { font-size: 16px; line-height: 1.6; max-width: 800px; margin: 0 auto 20px auto; padding: 15px 20px; background: #1e1e1e; border-radius: 8px; border-left: 4px solid #ff9800; color: #e0e0e0; }
-.description-label { font-size: 11px; text-transform: uppercase; color: #ff9800; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
-.viewer-heading { font-size: 11px; text-transform: uppercase; color: #aaa; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
+.case-description { font-size: 16px; line-height: 1.6; max-width: 800px; margin: 0 auto 20px auto; padding: 15px 20px; background: #282828; border-radius: 12px; border-left: 4px solid #c8392b; color: #f2f2f2; }
+.description-label { font-size: 11px; text-transform: uppercase; color: #c8392b; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
+.viewer-heading { font-size: 11px; text-transform: uppercase; color: #8a8a8e; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
 
 .article-citation {
     font-size: 11px;
-    color: #666;
-    border-top: 1px solid #333;
+    color: #8a8a8e;
+    border-top: 1px solid #3a3a3a;
     padding-top: 15px;
     margin-top: 20px;
 }
 .article-citation .row { display: flex; margin-bottom: 4px; }
-.article-citation .col-sm-3 { flex: 0 0 20%; color: #888; font-weight: bold; }
+.article-citation .col-sm-3 { flex: 0 0 20%; color: #8a8a8e; font-weight: bold; }
 .article-citation .col-sm-8 { flex: 0 0 80%; }
-.article-citation a { color: #888; text-decoration: underline; }
+.article-citation a { color: #8a8a8e; text-decoration: underline; }
 
 /* --- Grid (citation rows on back) --- */
 .row { display: flex; flex-wrap: wrap; margin-bottom: 4px; }
-.col-sm-3 { flex: 0 0 25%; max-width: 25%; font-weight: bold; color: #a6adc8; padding-right: 10px; }
+.col-sm-3 { flex: 0 0 25%; max-width: 25%; font-weight: bold; color: #8a8a8e; padding-right: 10px; }
 .col-sm-8 { flex: 0 0 75%; max-width: 75%; }
 
 /* ======== VIEWER ======== */
 #medical-viewer {
     display: flex;
     flex-direction: column;
-    background-color: #121212;
-    border-radius: 8px;
+    background-color: #141414;
+    border-radius: 12px;
     overflow: hidden;
     max-width: 800px;
     margin: 0 auto;
-    border: 1px solid #333;
+    box-shadow: 0 0 0 1px rgba(242,242,242,0.08);
 }
 
 #series-ribbon {
@@ -442,8 +442,8 @@ strong { color: #ffffff; font-weight: bold; }
     overflow-x: auto;
     gap: 15px;
     padding: 15px;
-    background-color: #1e1e1e;
-    border-bottom: 1px solid #333;
+    background-color: #282828;
+    border-bottom: 1px solid #3a3a3a;
 }
 #series-ribbon::-webkit-scrollbar { height: 8px; }
 #series-ribbon::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
@@ -453,14 +453,14 @@ strong { color: #ffffff; font-weight: bold; }
     flex: 0 0 120px;
     cursor: pointer;
     border: 2px solid transparent;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: border-color 0.2s;
     background: #000;
 }
-.thumbnail-card.active { border-color: #ff9800; }
-.thumbnail-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 2px 2px 0 0; display: block; }
+.thumbnail-card.active { border-color: #c8392b; }
+.thumbnail-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px 4px 0 0; display: block; }
 .stack-icon { position: absolute; bottom: 30px; right: 5px; background: rgba(0,0,0,0.7); color: white; font-size: 10px; padding: 2px 4px; border-radius: 3px; }
-.thumb-label { font-size: 11px; text-align: center; padding: 5px; background: #2a2a2a; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thumb-label { font-size: 11px; text-align: center; padding: 5px; background: #363636; color: #8a8a8e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 #main-viewport {
     position: relative;
@@ -472,17 +472,17 @@ strong { color: #ffffff; font-weight: bold; }
     cursor: ns-resize;
 }
 #current-slice { width: 100%; height: 100%; object-fit: contain; }
-#slice-indicator { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #ff9800; padding: 5px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; }
+#slice-indicator { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #c8392b; padding: 5px 10px; border-radius: 6px; font-size: 14px; font-weight: bold; }
 
-#cases-ribbon { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px; background-color: #121212; border-bottom: 1px solid #333; }
+#cases-ribbon { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px; background-color: #141414; border-bottom: 1px solid #3a3a3a; }
 #cases-ribbon::-webkit-scrollbar { height: 6px; }
 #cases-ribbon::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-.case-tab { padding: 6px 16px; background-color: #1e1e1e; color: #a6adc8; border: 1px solid #333; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
-.case-tab:hover { background-color: #2a2a2a; color: #e0e0e0; }
-.case-tab.active { background-color: rgba(255,152,0,0.15); color: #ff9800; border-color: #ff9800; }
+.case-tab { padding: 6px 16px; background-color: #282828; color: #8a8a8e; border: 1px solid #3a3a3a; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
+.case-tab:hover { background-color: #363636; color: #f2f2f2; }
+.case-tab.active { background-color: rgba(200,57,43,0.15); color: #c8392b; border-color: #c8392b; }
 
-.powered-by { font-size: 12px; text-align: center; color: #aaa; margin: 15px auto 10px auto; padding-top: 10px; border-top: 1px solid #333; width: fit-content; padding-left: 20px; padding-right: 20px; text-transform: uppercase; letter-spacing: 1px; }"""
+.powered-by { font-size: 12px; text-align: center; color: #8a8a8e; margin: 15px auto 10px auto; padding-top: 10px; border-top: 1px solid #3a3a3a; width: fit-content; padding-left: 20px; padding-right: 20px; text-transform: uppercase; letter-spacing: 1px; }"""
 
 # ---------------------------------------------------------------------------
 # Case card templates
@@ -539,64 +539,64 @@ CASE_BACK = """\
 
 CASE_CSS = """\
 .card {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #000000;
-    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inria Sans", ui-sans-serif, sans-serif;
+    background-color: #1a1a1a;
+    color: #f2f2f2;
     margin: 0;
     padding: 10px;
     text-align: left;
 }
 
-hr#answer { border: 0; border-bottom: 1px solid #444; margin: 20px auto; max-width: 800px; }
+hr#answer { border: 0; border-bottom: 1px solid #3a3a3a; margin: 20px auto; max-width: 800px; }
 
-.case-title { font-size: 26px; font-weight: bold; color: #ffffff; text-align: center; max-width: 800px; margin: 5px auto 15px auto; padding-bottom: 8px; border-bottom: 2px solid #ff9800; }
+.case-title { font-size: 26px; font-weight: bold; color: #ffffff; text-align: center; max-width: 800px; margin: 5px auto 15px auto; padding-bottom: 8px; border-bottom: 2px solid #c8392b; }
 
-.case-description { font-size: 16px; line-height: 1.6; text-align: left; max-width: 800px; margin: 0 auto 10px auto; padding: 15px 20px; background: #1e1e1e; border-radius: 8px; border-left: 4px solid #ff9800; color: #e0e0e0; }
+.case-description { font-size: 16px; line-height: 1.6; text-align: left; max-width: 800px; margin: 0 auto 10px auto; padding: 15px 20px; background: #282828; border-radius: 12px; border-left: 4px solid #c8392b; color: #f2f2f2; }
 
-.description-label { font-size: 11px; text-transform: uppercase; color: #ff9800; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
-.viewer-heading { font-size: 11px; text-transform: uppercase; color: #aaa; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
+.description-label { font-size: 11px; text-transform: uppercase; color: #c8392b; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px; }
+.viewer-heading { font-size: 11px; text-transform: uppercase; color: #8a8a8e; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.8px; }
 
-.case-reference, .article-citation { font-size: 11px; max-width: 800px; margin: 20px auto 5px auto; color: #666; border-top: 1px solid #333; padding-top: 15px; line-height: 1.5; }
+.case-reference, .article-citation { font-size: 11px; max-width: 800px; margin: 20px auto 5px auto; color: #8a8a8e; border-top: 1px solid #3a3a3a; padding-top: 15px; line-height: 1.5; }
 .case-reference .row, .article-citation .row { display: flex; flex-wrap: wrap; margin-bottom: 4px; }
-.case-reference .col-sm-3, .article-citation .col-sm-3 { flex: 0 0 25%; max-width: 25%; color: #888; font-weight: bold; padding-right: 10px; }
+.case-reference .col-sm-3, .article-citation .col-sm-3 { flex: 0 0 25%; max-width: 25%; color: #8a8a8e; font-weight: bold; padding-right: 10px; }
 .case-reference .col-sm-8, .article-citation .col-sm-8 { flex: 0 0 75%; max-width: 75%; }
-.case-reference a, .article-citation a { color: #888; text-decoration: underline; }
+.case-reference a, .article-citation a { color: #8a8a8e; text-decoration: underline; }
 
-.powered-by { font-size: 12px; text-align: center; color: #aaa; margin: 15px auto 10px auto; padding-top: 10px; border-top: 1px solid #333; width: fit-content; padding-left: 20px; padding-right: 20px; text-transform: uppercase; letter-spacing: 1px; }
+.powered-by { font-size: 12px; text-align: center; color: #8a8a8e; margin: 15px auto 10px auto; padding-top: 10px; border-top: 1px solid #3a3a3a; width: fit-content; padding-left: 20px; padding-right: 20px; text-transform: uppercase; letter-spacing: 1px; }
 
 .case-description h1 span[data-tippy-content], .case-description .favourite-btn, .case-description .rb-quick-links { display: none !important; }
 .case-description h1.header-title { display: none; }
-.case-description .section-title { font-size: 12px; text-transform: uppercase; color: #ff9800; font-weight: bold; margin-top: 25px; margin-bottom: 8px; letter-spacing: 1px; border-bottom: none; }
+.case-description .section-title { font-size: 12px; text-transform: uppercase; color: #c8392b; font-weight: bold; margin-top: 25px; margin-bottom: 8px; letter-spacing: 1px; border-bottom: none; }
 .case-description p, .case-description ul { margin-top: 0; margin-bottom: 12px; }
 .case-description li { margin-bottom: 6px; }
-.case-description a { color: #ff9800; text-decoration: none; border-bottom: 1px dotted #ff9800; }
+.case-description a { color: #c8392b; text-decoration: none; border-bottom: 1px dotted #c8392b; }
 .case-description a:hover { color: #ffffff; border-bottom-style: solid; }
 .case-description strong { color: #ffffff; font-weight: bold; }
 
 /* ======== VIEWER ======== */
-#medical-viewer { display: flex; flex-direction: column; background-color: #121212; border-radius: 8px; overflow: hidden; max-width: 800px; margin: 0 auto; border: 1px solid #333; }
+#medical-viewer { display: flex; flex-direction: column; background-color: #141414; border-radius: 12px; overflow: hidden; max-width: 800px; margin: 0 auto; box-shadow: 0 0 0 1px rgba(242,242,242,0.08); }
 
-#cases-ribbon { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px; background-color: #121212; border-bottom: 1px solid #333; }
+#cases-ribbon { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px; background-color: #141414; border-bottom: 1px solid #3a3a3a; }
 #cases-ribbon::-webkit-scrollbar { height: 6px; }
 #cases-ribbon::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-.case-tab { padding: 6px 16px; background-color: #1e1e1e; color: #a6adc8; border: 1px solid #333; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
-.case-tab:hover { background-color: #2a2a2a; color: #e0e0e0; }
-.case-tab.active { background-color: rgba(255,152,0,0.15); color: #ff9800; border-color: #ff9800; }
+.case-tab { padding: 6px 16px; background-color: #282828; color: #8a8a8e; border: 1px solid #3a3a3a; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
+.case-tab:hover { background-color: #363636; color: #f2f2f2; }
+.case-tab.active { background-color: rgba(200,57,43,0.15); color: #c8392b; border-color: #c8392b; }
 
-#series-ribbon { display: flex; overflow-x: auto; gap: 15px; padding: 15px; background-color: #1e1e1e; border-bottom: 1px solid #333; }
+#series-ribbon { display: flex; overflow-x: auto; gap: 15px; padding: 15px; background-color: #282828; border-bottom: 1px solid #3a3a3a; }
 #series-ribbon::-webkit-scrollbar { height: 8px; }
 #series-ribbon::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
-.thumbnail-card { position: relative; flex: 0 0 120px; cursor: pointer; border: 2px solid transparent; border-radius: 4px; transition: border-color 0.2s; background: #000; }
-.thumbnail-card.active { border-color: #ff9800; }
-.thumbnail-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 2px 2px 0 0; display: block; }
+.thumbnail-card { position: relative; flex: 0 0 120px; cursor: pointer; border: 2px solid transparent; border-radius: 6px; transition: border-color 0.2s; background: #000; }
+.thumbnail-card.active { border-color: #c8392b; }
+.thumbnail-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px 4px 0 0; display: block; }
 .stack-icon { position: absolute; bottom: 30px; right: 5px; background: rgba(0,0,0,0.7); color: white; font-size: 10px; padding: 2px 4px; border-radius: 3px; }
-.thumb-label { font-size: 11px; text-align: center; padding: 5px; background: #2a2a2a; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thumb-label { font-size: 11px; text-align: center; padding: 5px; background: #363636; color: #8a8a8e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 #main-viewport { position: relative; display: flex; justify-content: center; align-items: center; background-color: #000; height: 60vh; cursor: ns-resize; }
 #current-slice { width: 100%; height: 100%; object-fit: contain; }
-#slice-indicator { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #ff9800; padding: 5px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; }"""
+#slice-indicator { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #c8392b; padding: 5px 10px; border-radius: 6px; font-size: 14px; font-weight: bold; }"""
 
 # ---------------------------------------------------------------------------
 # Note models
